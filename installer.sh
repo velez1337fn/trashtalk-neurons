@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# No set -e — installer should be resilient to failures
-
 API_KEY="${TRASHNEURONS_API_KEY:-}"
 REPO_URL="https://github.com/velez1337fn/trashtalk-neurons"
 RELEASE_URL="https://api.github.com/repos/velez1337fn/trashtalk-neurons/releases/latest"
@@ -16,28 +14,6 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Detect if running in a terminal
-if [ -t 0 ]; then
-    IS_TERMINAL=true
-else
-    IS_TERMINAL=false
-fi
-
-print_logo() {
-    if [ "$IS_TERMINAL" = true ]; then
-        echo -e "${CYAN}"
-        cat << 'LOGO'
-   .___                 __         .__  .__                              ____    _______      _______
-   |   | ____   _______/  |______  |  | |  |   ___________      ___  __ /_   |   \   _  \     \   _  \
-   |   |/    \ /  ___/\   __\__  \ |  | |  | _/ __ \_  __ \     \  \/ /  |   |   /  /_\  \    /  /_\  \
-   |   |   |  \\___ \  |  |  / __ \|  |_|  |_\  ___/|  | \/      \   /   |   |   \  \_/   \   \  \_/   \
-   |___|___|  /____  > |__| (____  /____/____/\___  >__|          \_/    |___| /\ \_____  / /\ \_____  /
-            \/     \/            \/               \/                           \/       \/  \/       \/
-LOGO
-        echo -e "${NC}"
-    fi
-}
-
 detect_arch() {
     local arch
     arch=$(uname -m)
@@ -48,18 +24,38 @@ detect_arch() {
     esac
 }
 
+print_logo() {
+    echo -e "${CYAN}"
+    cat << 'LOGO'
+   .___                 __         .__  .__                              ____    _______      _______
+   |   | ____   _______/  |______  |  | |  |   ___________      ___  __ /_   |   \   _  \     \   _  \
+   |   |/    \ /  ___/\   __\__  \ |  | |  | _/ __ \_  __ \     \  \/ /  |   |   /  /_\  \    /  /_\  \
+   |   |   |  \\___ \  |  |  / __ \|  |_|  |_\  ___/|  | \/      \   /   |   |   \  \_/   \   \  \_/   \
+   |___|___|  /____  > |__| (____  /____/____/\___  >__|          \_/    |___| /\ \_____  / /\ \_____  /
+            \/     \/            \/               \/                           \/       \/  \/       \/
+LOGO
+    echo -e "${NC}"
+}
+
 install_cli() {
     local arch
     arch=$(detect_arch)
     local bin_file="trashneurons-cli-${arch}"
     local tmp_bin="/tmp/${bin_file}"
 
-    echo "Detecting system... linux-${arch}"
-    echo "Installing to ${INSTALL_DIR}/bin/"
+    echo -e "${BLUE}┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC} ${YELLOW}>${NC} allocating path where app/cli been installed...                                                                    ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
 
     mkdir -p "$INSTALL_DIR/bin"
-
-    echo "Fetching latest release..."
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                 ${GREEN}found! path is:${NC} ${INSTALL_DIR}                                                                            ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC} ${YELLOW}>${NC} checking for latest release...                                                                                       ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
 
     local latest_release
     if [ -n "$GITHUB_TOKEN" ]; then
@@ -72,18 +68,29 @@ install_cli() {
     asset_url=$(echo "$latest_release" | grep -o '"browser_download_url": "[^"]*'"${arch}"'[^"]*"' | head -1 | cut -d'"' -f4)
 
     if [ -z "$asset_url" ]; then
-        echo "ERROR: No release found for arch ${arch}"
-        echo "Run 'git tag v1.x.x && git push origin v1.x.x' to trigger a build."
+        echo -e "${BLUE}│${NC} ${RED}ERROR: No release found for arch ${arch}${NC}                                                                               ${BLUE}│${NC}"
+        echo -e "${BLUE}│${NC} Please run the GitHub Actions workflow first to build the binary.                                                      ${BLUE}│${NC}"
+        echo -e "${BLUE}└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
         exit 1
     fi
 
-    echo "Downloading from: $asset_url"
-    curl -L -o "$tmp_bin" "$asset_url" 2>/dev/null || {
-        echo "ERROR: Download failed"
-        exit 1
-    }
+    echo -e "${BLUE}│${NC} ${GREEN}found release! downloading...${NC}                                                                                         ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
 
+    curl -L -o "$tmp_bin" "$asset_url" 2>/dev/null
     chmod +x "$tmp_bin"
+
+    if [ ! -f "$tmp_bin" ]; then
+        echo -e "${BLUE}│${NC} ${RED}ERROR: Download failed${NC}                                                                                                ${BLUE}│${NC}"
+        echo -e "${BLUE}└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
+        exit 1
+    fi
+
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC} ${GREEN}downloaded!${NC}                                                                                                           ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}    ${YELLOW}installing your app/cli...${NC}                                                                                          ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
 
     cp "$tmp_bin" "$INSTALL_DIR/bin/${BIN_NAME}"
     rm -f "$tmp_bin"
@@ -92,10 +99,17 @@ install_cli() {
         sudo ln -sf "$INSTALL_DIR/bin/${BIN_NAME}" "/usr/local/bin/${BIN_NAME}" 2>/dev/null || true
     fi
 
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}  ${GREEN}finished install!${NC} all files located in ${INSTALL_DIR}                                                                   ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}  ${YELLOW}for use:${NC} type \"trashneurons-cli\"                                                                                    ${BLUE}│${NC}"
+    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+    echo -e "${BLUE}├──────────────────────┐${NC}                                                                                 ${BLUE}├────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${BLUE}│${NC} ${RED}PRESS CTRL+C TO CLOSE INSTALLER${NC}   ${BLUE}│${NC}                                                                                 ${BLUE}│${NC}"
+    echo -e "${BLUE}└──────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    echo "Installation complete!"
-    echo "Files located in: ${INSTALL_DIR}"
-    echo "Run: trashneurons-cli"
+    echo -e "${GREEN}Press Enter to exit...${NC}"
+    read -r
 }
 
 show_welcome_screen() {
@@ -130,12 +144,19 @@ show_welcome_screen() {
     echo -e "  ${GREEN}2.${NC} Exit"
     echo ""
     echo -ne "  ${YELLOW}Choose option [1-2]: ${NC}"
-    read -r choice < /dev/tty 2>/dev/null || read -r choice
+
+    choice=""
+    if [ -t 0 ]; then
+        read -r choice < /dev/tty 2>/dev/null || read -r choice
+    fi
 
     case "${choice}" in
         1) install_cli ;;
         2) exit 0 ;;
-        *) echo -e "${RED}Invalid option. Exiting.${NC}"; exit 1 ;;
+        *)
+            echo -e "${RED}Invalid option. Exiting.${NC}"
+            exit 1
+            ;;
     esac
 }
 

@@ -16,9 +16,17 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+# Detect if running in a terminal
+if [ -t 0 ]; then
+    IS_TERMINAL=true
+else
+    IS_TERMINAL=false
+fi
+
 print_logo() {
-    echo -e "${CYAN}"
-    cat << 'LOGO'
+    if [ "$IS_TERMINAL" = true ]; then
+        echo -e "${CYAN}"
+        cat << 'LOGO'
    .___                 __         .__  .__                              ____    _______      _______
    |   | ____   _______/  |______  |  | |  |   ___________      ___  __ /_   |   \   _  \     \   _  \
    |   |/    \ /  ___/\   __\__  \ |  | |  | _/ __ \_  __ \     \  \/ /  |   |   /  /_\  \    /  /_\  \
@@ -26,7 +34,8 @@ print_logo() {
    |___|___|  /____  > |__| (____  /____/____/\___  >__|          \_/    |___| /\ \_____  / /\ \_____  /
             \/     \/            \/               \/                           \/       \/  \/       \/
 LOGO
-    echo -e "${NC}"
+        echo -e "${NC}"
+    fi
 }
 
 detect_arch() {
@@ -37,6 +46,56 @@ detect_arch() {
         aarch64|arm64) echo "arm64" ;;
         *) echo "amd64" ;;
     esac
+}
+
+install_cli() {
+    local arch
+    arch=$(detect_arch)
+    local bin_file="trashneurons-cli-${arch}"
+    local tmp_bin="/tmp/${bin_file}"
+
+    echo "Detecting system... linux-${arch}"
+    echo "Installing to ${INSTALL_DIR}/bin/"
+
+    mkdir -p "$INSTALL_DIR/bin"
+
+    echo "Fetching latest release..."
+
+    local latest_release
+    if [ -n "$GITHUB_TOKEN" ]; then
+        latest_release=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$RELEASE_URL")
+    else
+        latest_release=$(curl -s "$RELEASE_URL")
+    fi
+
+    local asset_url
+    asset_url=$(echo "$latest_release" | grep -o '"browser_download_url": "[^"]*'"${arch}"'[^"]*"' | head -1 | cut -d'"' -f4)
+
+    if [ -z "$asset_url" ]; then
+        echo "ERROR: No release found for arch ${arch}"
+        echo "Run 'git tag v1.x.x && git push origin v1.x.x' to trigger a build."
+        exit 1
+    fi
+
+    echo "Downloading from: $asset_url"
+    curl -L -o "$tmp_bin" "$asset_url" 2>/dev/null || {
+        echo "ERROR: Download failed"
+        exit 1
+    }
+
+    chmod +x "$tmp_bin"
+
+    cp "$tmp_bin" "$INSTALL_DIR/bin/${BIN_NAME}"
+    rm -f "$tmp_bin"
+
+    if [ ! -L "/usr/local/bin/${BIN_NAME}" ] && [ ! -f "/usr/local/bin/${BIN_NAME}" ]; then
+        sudo ln -sf "$INSTALL_DIR/bin/${BIN_NAME}" "/usr/local/bin/${BIN_NAME}" 2>/dev/null || true
+    fi
+
+    echo ""
+    echo "Installation complete!"
+    echo "Files located in: ${INSTALL_DIR}"
+    echo "Run: trashneurons-cli"
 }
 
 show_welcome_screen() {
@@ -78,82 +137,6 @@ show_welcome_screen() {
         2) exit 0 ;;
         *) echo -e "${RED}Invalid option. Exiting.${NC}"; exit 1 ;;
     esac
-}
-
-install_cli() {
-    clear
-    echo -e "${BLUE}┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-
-    echo -e "${BLUE}│${NC} ${YELLOW}>${NC} allocating path where app/cli been installed...                                                                    ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-
-    mkdir -p "$INSTALL_DIR/bin"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                 ${GREEN}found! path is:${NC} ${INSTALL_DIR}                                                                            ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC} ${YELLOW}>${NC} checking for latest release...                                                                                       ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-
-    local arch
-    arch=$(detect_arch)
-    local bin_file="trashneurons-cli-${arch}"
-    local tmp_bin="/tmp/${bin_file}"
-
-    local latest_release
-    if [ -n "$GITHUB_TOKEN" ]; then
-        latest_release=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$RELEASE_URL")
-    else
-        latest_release=$(curl -s "$RELEASE_URL")
-    fi
-    local asset_url
-    asset_url=$(echo "$latest_release" | grep -o "\"browser_download_url\": \"[^\"]*${arch}[^\"]*\"" | head -1 | cut -d'"' -f4)
-
-    if [ -z "$asset_url" ]; then
-        echo -e "${BLUE}│${NC} ${RED}ERROR: No release found for arch ${arch}${NC}                                                                               ${BLUE}│${NC}"
-        echo -e "${BLUE}│${NC} Please run the GitHub Actions workflow first to build the binary.                                                      ${BLUE}│${NC}"
-        echo -e "${BLUE}└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
-        exit 1
-    fi
-
-    echo -e "${BLUE}│${NC} ${GREEN}found release! downloading...${NC}                                                                                         ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-
-    curl -L -o "$tmp_bin" "$asset_url" 2>/dev/null
-    chmod +x "$tmp_bin"
-
-    if [ ! -f "$tmp_bin" ]; then
-        echo -e "${BLUE}│${NC} ${RED}ERROR: Download failed${NC}                                                                                                ${BLUE}│${NC}"
-        echo -e "${BLUE}└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
-        exit 1
-    fi
-
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC} ${GREEN}downloaded!${NC}                                                                                                           ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}    ${YELLOW}installing your app/cli...${NC}                                                                                          ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-
-    cp "$tmp_bin" "$INSTALL_DIR/bin/${BIN_NAME}"
-    rm -f "$tmp_bin"
-
-    if [ ! -L "/usr/local/bin/${BIN_NAME}" ] && [ ! -f "/usr/local/bin/${BIN_NAME}" ]; then
-        sudo ln -sf "$INSTALL_DIR/bin/${BIN_NAME}" "/usr/local/bin/${BIN_NAME}" 2>/dev/null || true
-    fi
-
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}  ${GREEN}finished install!${NC} all files located in ${INSTALL_DIR}                                                                   ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}  ${YELLOW}for use:${NC} type \"trashneurons-cli\"                                                                                    ${BLUE}│${NC}"
-    echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
-    echo -e "${BLUE}├──────────────────────┐${NC}                                                                                 ${BLUE}├────────────────────────────────────────────────────────┤${NC}"
-    echo -e "${BLUE}│${NC} ${RED}PRESS CTRL+C TO CLOSE INSTALLER${NC}   ${BLUE}│${NC}                                                                                 ${BLUE}│${NC}"
-    echo -e "${BLUE}└──────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
-    echo ""
-    echo -e "${GREEN}Press Enter to exit...${NC}"
-    read -r
 }
 
 show_welcome_screen

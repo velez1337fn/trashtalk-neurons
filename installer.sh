@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+# No set -e — installer should be resilient to failures
 
 API_KEY="${TRASHNEURONS_API_KEY:-}"
 REPO_URL="https://github.com/velez1337fn/trashtalk-neurons"

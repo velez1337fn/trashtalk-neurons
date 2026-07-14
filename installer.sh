@@ -18,7 +18,7 @@ else
 fi
 
 info() {
-    echo -e "${Muted}$@ ${NC}"
+    echo -e "${MUTED}$@ ${NC}"
 }
 
 info_bold() {
@@ -26,11 +26,11 @@ info_bold() {
 }
 
 success() {
-    echo -e "${Green}$@ ${NC}"
+    echo -e "${GREEN}$@ ${NC}"
 }
 
 error() {
-    echo -e "${Red}$@ ${NC}" >&2
+    echo -e "${RED}$@ ${NC}" >&2
     exit 1
 }
 
@@ -65,16 +65,16 @@ filename="${APP}-${os}-${arch}.tar.gz"
 url="https://github.com/velez1337fn/trashtalk-neurons/releases/download/v1.0.0/$filename"
 exe="$install_dir/$APP"
 
-echo -e "${Blue}┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}│${NC} ${Green}>${NC} allocating path where app/cli been installed...                                                                    ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                 ${Green}found! path is:${NC} ${install_dir}                                                                            ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}│${NC} ${Green}>${NC} starting download via curl...                                                                                       ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
+echo -e "${BLUE}┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC} ${GREEN}>${NC} allocating path where app/cli been installed...                                                                    ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                 ${GREEN}found! path is:${NC} ${install_dir}                                                                            ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC} ${GREEN}>${NC} starting download via curl...                                                                                       ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
 
 tmp_dir="${TMPDIR:-/tmp}/trashneurons_install_$$"
 mkdir -p "$tmp_dir"
@@ -88,17 +88,17 @@ mv "$tmp_dir/$APP" "$exe"
 chmod +x "$exe"
 rm -rf "$tmp_dir"
 
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}│${NC}    ${Green}installing your app/cli...${NC}                                                                                          ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}│${NC}  ${Green}finished install!${NC} all files located in ${install_dir}                                                                   ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}│${NC}  ${MUTED}for use:${NC} type \"trashneurons-cli\"                                                                                    ${Blue}│${NC}"
-echo -e "${Blue}│${NC}                                                                                                                        ${Blue}│${NC}"
-echo -e "${Blue}├──────────────────────┐${NC}                                                                                 ${Blue}├────────────────────────────────────────────────────────┤${NC}"
-echo -e "${Blue}│${NC} ${RED}PRESS CTRL+C TO CLOSE INSTALLER${NC}   ${Blue}│${NC}                                                                                 ${Blue}│${NC}"
-echo -e "${Blue}└──────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}    ${GREEN}installing your app/cli...${NC}                                                                                          ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}  ${GREEN}finished install!${NC} all files located in ${install_dir}                                                                   ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}  ${MUTED}for use:${NC} type \"trashneurons-cli\"                                                                                    ${BLUE}│${NC}"
+echo -e "${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}"
+echo -e "${BLUE}├──────────────────────┐${NC}                                                                                 ${BLUE}├────────────────────────────────────────────────────────┤${NC}"
+echo -e "${BLUE}│${NC} ${RED}PRESS CTRL+C TO CLOSE INSTALLER${NC}   ${BLUE}│${NC}                                                                                 ${BLUE}│${NC}"
+echo -e "${BLUE}└──────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
 
 current_shell=$(basename "$SHELL" 2>/dev/null || echo "bash")
 case $current_shell in
@@ -119,12 +119,12 @@ elif [[ ":$PATH:" != *":$install_dir:"* ]]; then
 fi
 
 echo ""
-echo -e "${Green}  .___                 __         .__  .__                              ____    _______      _______${NC}"
-echo -e "${Green}  |   | ____   _______/  |______  |  | |  |   ___________      ___  __ /_   |   \\   _  \\     \\   _  \\${NC}"
-echo -e "${Green}  |   |/    \\ /  ___/\\   __\\__  \\ |  | |  | _/ __ \\_  __ \\     \\  \\/ /  |   |   /  /_\\  \\    /  /_\\  \\${NC}"
-echo -e "${Green}  |   |   |  \\\\___ \\  |  |  / __ \\|  |_|  |\\_  ___/|  | \\/      \\   /   |   |   \\  \\_/   \\   \\  \\_/   \\${NC}"
-echo -e "${Green}  |___|___|  /____  > |__| (____  /____/____/\\___  >__|          \\_/    |___| /\\ \\_____  / /\\ \\_____  /${NC}"
-echo -e "${Green}           \\/     \\/            \\/               \\/                           \\/       \\/  \\/       \/${NC}"
+echo -e "${GREEN}  .___                 __         .__  .__                              ____    _______      _______${NC}"
+echo -e "${GREEN}  |   | ____   _______/  |______  |  | |  |   ___________      ___  __ /_   |   \\   _  \\     \\   _  \\${NC}"
+echo -e "${GREEN}  |   |/    \\ /  ___/\\   __\\__  \\ |  | |  | _/ __ \\_  __ \\     \\  \\/ /  |   |   /  /_\\  \\    /  /_\\  \\${NC}"
+echo -e "${GREEN}  |   |   |  \\\\___ \\  |  |  / __ \\|  |_|  |\\_  ___/|  | \\/      \\   /   |   |   \\  \\_/   \\   \\  \\_/   \\${NC}"
+echo -e "${GREEN}  |___|___|  /____  > |__| (____  /____/____/\\___  >__|          \\_/    |___| /\\ \\_____  / /\\ \\_____  /${NC}"
+echo -e "${GREEN}           \\/     \\/            \\/               \\/                           \\/       \\/  \\/       \/${NC}"
 echo ""
 echo -e "${MUTED}  trashneurons-cli is installed and ready to use.${NC}"
 echo -e "${MUTED}  Run 'trashneurons-cli' to start.${NC}"

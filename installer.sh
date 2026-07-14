@@ -151,7 +151,7 @@ show_welcome_screen() {
     echo -ne "  ${YELLOW}Choose option [1-2]: ${NC}"
 
     choice=""
-    if [ -t 0 ]; then
+    if [ -t 1 ]; then
         read -r choice < /dev/tty 2>/dev/null || read -r choice
     else
         choice="1"

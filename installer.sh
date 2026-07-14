@@ -113,6 +113,11 @@ install_cli() {
 }
 
 show_welcome_screen() {
+    if [ "$1" = "--auto" ]; then
+        install_cli
+        return
+    fi
+
     clear
     print_logo
 
@@ -148,6 +153,8 @@ show_welcome_screen() {
     choice=""
     if [ -t 0 ]; then
         read -r choice < /dev/tty 2>/dev/null || read -r choice
+    else
+        choice="1"
     fi
 
     case "${choice}" in

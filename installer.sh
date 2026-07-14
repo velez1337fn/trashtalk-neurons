@@ -71,7 +71,7 @@ show_welcome_screen() {
     echo -e "  ${GREEN}2.${NC} Exit"
     echo ""
     echo -ne "  ${YELLOW}Choose option [1-2]: ${NC}"
-    read -r -t 30 choice 2>/dev/null || choice=""
+    read -r choice < /dev/tty 2>/dev/null || read -r choice
 
     case "${choice}" in
         1) install_cli ;;

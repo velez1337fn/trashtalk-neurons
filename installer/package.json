@@ -1,0 +1,9 @@
+{
+  "name": "trashneurons-installer",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": "src/index.ts",
+  "scripts": {
+    "build": "bun build src/index.ts --compile --target bun-linux-x64 --outfile ../installer.bin --minify"
+  }
+}

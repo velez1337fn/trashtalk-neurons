@@ -16,15 +16,16 @@ const LOGO = `${CYAN}   .___                 __         .__  .__                
    |___|___|  /____  > |__| (____  /____/____/\\___  >__|          \\_/    |___| /\\ \\_____  / /\\ \\_____  /
             \\/     \\/            \\/               \\/                           \\/       \\/  \\/       \\/${NC}`
 
-async function main() {
-  const user = Deno.env.get("USER") || "user"
+const { env } = require("process")
+const { mkdir, rename, chmod, symlink, open, read, write } = require("fs/promises")
+const { execSync } = require("child_process")
+const { join } = require("path")
 
-  let arch: string
-  try {
-    arch = Deno.info().systemInfo.arch
-  } catch {
-    arch = "x86_64"
-  }
+async function main() {
+  const user = env.USER || env.HOME?.split("/").pop() || "user"
+
+  let arch = "x86_64"
+  try { arch = execSync("uname -m").toString().trim() } catch {}
   const displayArch = arch === "x86_64" ? "amd64" : "arm64"
   const sysInfo = `linux-${displayArch}`
 
@@ -63,29 +64,22 @@ async function main() {
     return
   }
 
-  await install()
+  await install(displayArch)
 }
 
 function promptChoice(): Promise<number> {
   return new Promise((resolve) => {
-    const stdin = Deno.stdin;
-    const buf = new Uint8Array(16);
-
-    const readLoop = () => {
-      stdin.readSync(buf);
-      const text = new TextDecoder().decode(buf).trim();
-      const num = parseInt(text);
-      if (!isNaN(num) && (num === 1 || num === 2)) {
-        resolve(num);
-        return;
-      }
-      readLoop();
-    };
-    readLoop();
-  });
+    const readline = require("readline").createInterface({ input: process.stdin, output: process.stdout })
+    readline.question("Choose option [1-2]: ", (answer) => {
+      readline.close()
+      const num = parseInt(answer.trim())
+      if (num === 1 || num === 2) resolve(num)
+      else resolve(0)
+    })
+  })
 }
 
-async function install() {
+async function install(targetArch) {
   console.log("")
   console.log(`${BLUE}┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐${NC}`)
   console.log(`${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}`)
@@ -93,10 +87,10 @@ async function install() {
   console.log(`${BLUE}│${NC} ${YELLOW}>${NC} allocating path where app/cli been installed...                                                                    ${BLUE}│${NC}`)
   console.log(`${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}`)
 
-  const home = Deno.env.get("HOME")!
-  const installDir = `${home}/.trashneurons`
-  const binDir = `${installDir}/bin`
-  await Deno.mkdir(binDir, { recursive: true })
+  const home = env.HOME
+  const installDir = join(home, ".trashneurons")
+  const binDir = join(installDir, "bin")
+  await mkdir(binDir, { recursive: true })
 
   console.log(`${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}`)
   console.log(`${BLUE}│${NC}                 ${GREEN}found! path is:${NC} ${installDir}                                                                            ${BLUE}│${NC}`)
@@ -107,10 +101,8 @@ async function install() {
   console.log(`${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}`)
 
   const resp = await fetch("https://api.github.com/repos/velez1337fn/trashtalk-neurons/releases/latest")
-  const release: { assets: { name: string; browser_download_url: string }[] } = await resp.json()
+  const release = await resp.json()
 
-  const isArm = Deno.build.target.arch === "aarch64"
-  const targetArch = isArm ? "arm64" : "amd64"
   const asset = release.assets.find(a => a.name.includes(targetArch))
 
   if (!asset) {
@@ -125,11 +117,11 @@ async function install() {
   console.log(`${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}`)
 
   const dlResp = await fetch(asset.browser_download_url)
-  const tmpPath = `/tmp/trashneurons-installer-bin`
-  const file = await Deno.open(tmpPath, { write: true, create: true, truncate: true })
-  await dlResp.body!.pipeTo(file.writable)
+  const tmpPath = `/tmp/trashneurons-installer-bin-${targetArch}`
+  const file = await open(tmpPath, "w")
+  await dlResp.body.pipe(file)
   file.close()
-  await Deno.chmod(tmpPath, 0o755)
+  await chmod(tmpPath, 0o755)
 
   console.log(`${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}`)
   console.log(`${BLUE}│${NC} ${GREEN}downloaded!${NC}                                                                                                           ${BLUE}│${NC}`)
@@ -137,11 +129,11 @@ async function install() {
   console.log(`${BLUE}│${NC}    ${YELLOW}installing your app/cli...${NC}                                                                                          ${BLUE}│${NC}`)
   console.log(`${BLUE}│${NC}                                                                                                                        ${BLUE}│${NC}`)
 
-  const destBin = `${binDir}/trashneurons-cli`
-  await Deno.rename(tmpPath, destBin)
+  const destBin = join(binDir, "trashneurons-cli")
+  await rename(tmpPath, destBin)
 
   try {
-    await Deno.symlink(destBin, "/usr/local/bin/trashneurons-cli")
+    await symlink(destBin, "/usr/local/bin/trashneurons-cli")
   } catch {
     // need sudo, skip
   }
@@ -156,11 +148,9 @@ async function install() {
   console.log(`${BLUE}└──────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}`)
   console.log("")
   console.log(`${GREEN}Press Enter to exit...${NC}`)
-  await new Promise<void>((resolve) => {
-    const stdin = Deno.stdin;
-    const buf = new Uint8Array(16);
-    stdin.readSync(buf);
-    resolve();
+  await new Promise((resolve) => {
+    const readline = require("readline").createInterface({ input: process.stdin, output: process.stdout })
+    readline.once("close", resolve)
   })
 }
 

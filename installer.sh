@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -71,9 +71,9 @@ show_welcome_screen() {
     echo -e "  ${GREEN}2.${NC} Exit"
     echo ""
     echo -ne "  ${YELLOW}Choose option [1-2]: ${NC}"
-    read -r choice
+    read -r -t 30 choice 2>/dev/null || choice=""
 
-    case "$choice" in
+    case "${choice}" in
         1) install_cli ;;
         2) exit 0 ;;
         *) echo -e "${RED}Invalid option. Exiting.${NC}"; exit 1 ;;

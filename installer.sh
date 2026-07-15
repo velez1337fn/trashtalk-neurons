@@ -17,18 +17,6 @@ else
     Bold_Green=''
 fi
 
-info() {
-    echo -e "${MUTED}$@ ${NC}"
-}
-
-info_bold() {
-    echo -e "${Bold_White}$@ ${NC}"
-}
-
-success() {
-    echo -e "${GREEN}$@ ${NC}"
-}
-
 error() {
     echo -e "${RED}$@ ${NC}" >&2
     exit 1
@@ -111,9 +99,9 @@ esac
 if [[ -f "$config_file" ]] && [[ ":$PATH:" != *":$install_dir:"* ]]; then
     case $current_shell in
         fish) echo "fish_add_path $install_dir" >> "$config_file" ;;
-        *) echo ""; echo "# trashneurons" >> "$config_file"; echo "export PATH=$install_dir:\$PATH" >> "$config_file" ;;
+        *) echo "" >> "$config_file"; echo "# trashneurons" >> "$config_file"; echo "export PATH=$install_dir:\$PATH" >> "$config_file" ;;
     esac
-    success "Added $install_dir to PATH"
+    echo -e "${GREEN}Added $install_dir to PATH${NC}"
 elif [[ ":$PATH:" != *":$install_dir:"* ]]; then
     export PATH=$install_dir:$PATH
 fi

@@ -647,6 +647,9 @@ func saveChats(home string, chats []*ChatSession) {
 }
 
 func showBootScreen() {
+	if fi, err := os.Stdin.Stat(); err == nil && (fi.Mode()&os.ModeNamedPipe) != 0 {
+		return
+	}
 	bootApp := tview.NewApplication()
 
 	outer := tview.NewFlex().SetDirection(tview.FlexRow)

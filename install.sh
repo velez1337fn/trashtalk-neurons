@@ -14,7 +14,6 @@ fi
 
 clear
 
-# ASCII-арт с рамкой (полностью соответствует макету)
 cat << "EOF"
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────┐
 │   .___                 __         .__  .__                              ____    _______      _______     │telegram - @trashtalkAI│
@@ -64,18 +63,16 @@ if [ "$INSTALL_CLI" = true ]; then
     INSTALL_DIR="$HOME/.local/bin"
     mkdir -p "$INSTALL_DIR"
 
-    # Проверка доступности GitHub
     echo -e "${BLUE}Проверка соединения с GitHub...${NC}"
     if ! curl -sSf --connect-timeout 5 https://github.com > /dev/null; then
-        echo -e "${RED}Не удаётся подключиться к GitHub. Проверьте интернет и DNS.${NC}"
-        echo -e "${YELLOW}Попробуйте выполнить: echo 'nameserver 1.1.1.1' | sudo tee /etc/resolv.conf${NC}"
+        echo -e "${RED}Не удаётся подключиться к GitHub.${NC}"
+        echo -e "${YELLOW}Попробуйте: echo 'nameserver 1.1.1.1' | sudo tee /etc/resolv.conf${NC}"
         exit 1
     fi
 
     echo -e "${BLUE}Скачивание бинарника...${NC}"
-    # Скачиваем с прогресс-баром
     if ! curl -L -o /tmp/trashneurons-cli https://github.com/velez1337fn/trashtalk-neurons/releases/latest/download/trashneurons-cli --progress-bar; then
-        echo -e "${RED}Ошибка скачивания. Проверьте URL или версию релиза.${NC}"
+        echo -e "${RED}Ошибка скачивания.${NC}"
         exit 1
     fi
 
@@ -91,7 +88,7 @@ if [ "$INSTALL_CLI" = true ]; then
     mkdir -p "$HOME/.config/trashneurons"
 
     echo -e "\n${GREEN}Установка завершена!${NC}"
-    echo -e "Теперь вы можете запустить CLI командой: ${YELLOW}trashneurons-cli${NC}"
+    echo -e "Теперь запускайте: ${YELLOW}trashneurons-cli${NC}"
     echo -e "Если команда не найдена, перезапустите терминал или выполните: ${YELLOW}source ~/.bashrc${NC}"
 fi
 

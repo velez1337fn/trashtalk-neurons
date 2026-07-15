@@ -36,7 +36,11 @@ if [[ "$os" == "linux" ]]; then
 fi
 
 filename="${APP}-${os}-${arch}.tar.gz"
-url="https://github.com/velez1337fn/trashtalk-neurons/releases/download/v1.0.0/$filename"
+tag=$(curl -s https://api.github.com/repos/velez1337fn/trashtalk-neurons/releases/latest | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+if [ -z "$tag" ]; then
+    tag="v1.0.0"
+fi
+url="https://github.com/velez1337fn/trashtalk-neurons/releases/download/${tag}/$filename"
 exe="$install_dir/$APP"
 
 echo "> allocating path where app/cli been installed..."

@@ -56,7 +56,7 @@ echo "    installing your app/cli..."
 
 tar -xzf "$tmp_dir/$filename" -C "$tmp_dir"
 
-mv "$tmp_dir/$APP" "$exe"
+mv "$tmp_dir/$filename" "$exe"
 chmod +x "$exe"
 rm -rf "$tmp_dir"
 

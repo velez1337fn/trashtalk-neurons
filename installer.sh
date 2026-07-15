@@ -45,6 +45,13 @@ exe="$install_dir/$APP"
 
 echo "> allocating path where app/cli been installed..."
 echo "  found! path is: $install_dir"
+
+if [[ -f "$exe" ]]; then
+    echo ""
+    echo "  existing installation found, removing..."
+    rm -f "$exe"
+    echo "  removed."
+fi
 echo ""
 echo "> starting download via curl..."
 

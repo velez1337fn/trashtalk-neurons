@@ -682,11 +682,7 @@ func showBootScreen() {
 
 	done := make(chan struct{})
 	inputField.SetDoneFunc(func(key tcell.Key) {
-		if key == tcell.KeyEscape {
-			bootApp.Stop()
-			done <- struct{}{}
-			return
-		}
+		bootApp.Stop()
 		go func() {
 			for i := 3; i > 0; i-- {
 				bootApp.QueueUpdateDraw(func() {
@@ -697,6 +693,22 @@ func showBootScreen() {
 			bootApp.Stop()
 			done <- struct{}{}
 		}()
+	})
+
+	inputField.SetChangedFunc(func(text string) {
+		if text != "" {
+			bootApp.Stop()
+			go func() {
+				for i := 3; i > 0; i-- {
+					bootApp.QueueUpdateDraw(func() {
+						statusText.SetText(fmt.Sprintf("successfully! opening in %d...", i))
+					})
+					time.Sleep(1 * time.Second)
+				}
+				bootApp.Stop()
+				done <- struct{}{}
+			}()
+		}
 	})
 
 	outer.AddItem(inputField, 1, 1, true)

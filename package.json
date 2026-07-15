@@ -1,0 +1,13 @@
+{
+  "name": "trashtalk-neurons",
+  "version": "1.0.1",
+  "description": "TrashNeurons AI assistant installer",
+  "bin": {
+    "trashneurons-installer": "install.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/velez1337fn/trashtalk-neurons"
+  },
+  "license": "MIT"
+}

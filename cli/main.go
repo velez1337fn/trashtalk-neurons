@@ -671,19 +671,32 @@ func showBootScreen() {
 	inputField.SetPlaceholder("press any key to continue...")
 
 	done := make(chan struct{})
-	inputField.SetChangedFunc(func(text string) {
-		if text != "" {
-			bootApp.Stop()
-			go func() {
-				for i := 3; i > 0; i-- {
-					bootApp.QueueUpdateDraw(func() {
-						statusText.SetText(fmt.Sprintf("successfully! opening in %d...", i))
-					})
-					time.Sleep(1 * time.Second)
-				}
-				done <- struct{}{}
-			}()
+
+	enterDone := func() {
+		bootApp.Stop()
+		go func() {
+			for i := 3; i > 0; i-- {
+				bootApp.QueueUpdateDraw(func() {
+					statusText.SetText(fmt.Sprintf("successfully! opening in %d...", i))
+				})
+				time.Sleep(1 * time.Second)
+			}
+			done <- struct{}{}
+		}()
+	}
+
+	inputField.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEnter {
+			enterDone()
 		}
+	})
+
+	inputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() != tcell.KeyEnter {
+			enterDone()
+			return nil
+		}
+		return event
 	})
 
 	outer.AddItem(inputField, 1, 1, true)

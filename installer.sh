@@ -7,7 +7,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 ORANGE='\033[38;5;214m'
-NC='\033[0m'
+NC=$'\033[0m'
 
 if [[ -t 1 ]]; then
     Bold_White='\033[1m'
@@ -101,19 +101,19 @@ if [[ -f "$config_file" ]] && [[ ":$PATH:" != *":$install_dir:"* ]]; then
         fish) echo "fish_add_path $install_dir" >> "$config_file" ;;
         *) echo "" >> "$config_file"; echo "# trashneurons" >> "$config_file"; echo "export PATH=$install_dir:\$PATH" >> "$config_file" ;;
     esac
-    printf '%b\n' "${GREEN}Added $install_dir to PATH${NC}"
+    echo -e "${GREEN}Added $install_dir to PATH${NC}"
 elif [[ ":$PATH:" != *":$install_dir:"* ]]; then
     export PATH=$install_dir:$PATH
 fi
 
 echo ""
-printf '%b\n' "${GREEN}  .___                 __         .__  .__                              ____    _______      _______${NC}"
-printf '%b\n' "${GREEN}  |   | ____   _______/  |______  |  | |  |   ___________      ___  __ /_   |   \\   _  \\     \\   _  \\${NC}"
-printf '%b\n' "${GREEN}  |   |/    \\ /  ___/\\   __\\__  \\ |  | |  | _/ __ \\_  __ \\     \\  \\/ /  |   |   /  /_\\  \\    /  /_\\  \\${NC}"
-printf '%b\n' "${GREEN}  |   |   |  \\\\___ \\  |  |  / __ \\|  |_|  |\\_  ___/|  | \\/      \\   /   |   |   \\  \\_/   \\   \\  \\_/   \\${NC}"
-printf '%b\n' "${GREEN}  |___|___|  /____  > |__| (____  /____/____/\\___  >__|          \\_/    |___| /\\ \\_____  / /\\ \\_____  /${NC}"
-printf '%b\n' "${GREEN}           \\/     \\/            \\/               \\/                           \\/       \\/  \\/       \/${NC}"
+echo -e "${GREEN}  .___                 __         .__  .__                              ____    _______      _______${NC}"
+echo -e "${GREEN}  |   | ____   _______/  |______  |  | |  |   ___________      ___  __ /_   |   \\   _  \\     \\   _  \\${NC}"
+echo -e "${GREEN}  |   |/    \\ /  ___/\\   __\\__  \\ |  | |  | _/ __ \\_  __ \\     \\  \\/ /  |   |   /  /_\\  \\    /  /_\\  \\${NC}"
+echo -e "${GREEN}  |   |   |  \\\\___ \\  |  |  / __ \\|  |_|  |\\_  ___/|  | \\/      \\   /   |   |   \\  \\_/   \\   \\  \\_/   \\${NC}"
+echo -e "${GREEN}  |___|___|  /____  > |__| (____  /____/____/\\___  >__|          \\_/    |___| /\\ \\_____  / /\\ \\_____  /${NC}"
+echo -e "${GREEN}           \\/     \\/            \\/               \\/                           \\/       \\/  \\/       \/${NC}"
 echo ""
-printf '%b\n' "${MUTED}  trashneurons-cli is installed and ready to use.${NC}"
-printf '%b\n' "${MUTED}  Run 'trashneurons-cli' to start.${NC}"
+echo -e "${MUTED}  trashneurons-cli is installed and ready to use.${NC}"
+echo -e "${MUTED}  Run 'trashneurons-cli' to start.${NC}"
 echo ""

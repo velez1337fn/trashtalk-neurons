@@ -91,19 +91,12 @@ type App struct {
 	pages         *tview.Pages
 	sidePanel     *tview.Frame
 	modeText      *tview.TextView
-	arrowUp       *tview.TextView
-	arrowDown     *tview.TextView
 	separator     *tview.TextView
-	rightPanel    *tview.Flex
-	mainInput     *tview.InputField
-	mainInputBox  *tview.Box
-	shipLogo      *tview.TextView
+	mainFlex      *tview.Flex
+	inputBox      *tview.Box
+	inputField    *tview.InputField
+	chatArea      *tview.TextView
 	animationLbl  *tview.TextView
-	chatTopBox    *tview.Box
-	aiAnswerLbl   *tview.TextView
-	thinkingLbl   *tview.TextView
-	chatBottomBox *tview.Box
-	userQuestion  *tview.TextView
 	currentMode   Mode
 	currentChat   *ChatSession
 	chats         []*ChatSession
@@ -246,11 +239,11 @@ func (a *App) buildUI() {
 	a.pages = tview.NewPages()
 
 	a.buildSidePanel()
-	a.buildRightPanel()
+	a.buildMainArea()
 
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexColumn)
 	mainFlex.AddItem(a.sidePanel, 20, 1, false)
-	mainFlex.AddItem(a.rightPanel, 0, 10, false)
+	mainFlex.AddItem(a.mainFlex, 0, 10, false)
 
 	mainFrame := tview.NewFrame(mainFlex)
 	mainFrame.SetBorder(true)
@@ -278,12 +271,6 @@ func (a *App) buildSidePanel() {
 	a.modeText = tview.NewTextView().SetText("code").SetTextColor(tcell.ColorYellow)
 	panelFlex.AddItem(a.modeText, 1, 1, false)
 
-	a.arrowUp = tview.NewTextView().SetText("   ^").SetTextColor(tcell.ColorWhite)
-	panelFlex.AddItem(a.arrowUp, 1, 1, false)
-
-	a.arrowDown = tview.NewTextView().SetText("   v").SetTextColor(tcell.ColorWhite)
-	panelFlex.AddItem(a.arrowDown, 1, 1, false)
-
 	a.separator = tview.NewTextView().SetText("──┴───────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────").SetTextColor(tcell.ColorGray)
 	panelFlex.AddItem(a.separator, 1, 1, false)
 
@@ -299,46 +286,49 @@ func (a *App) getModeName() string {
 	return "chat"
 }
 
-func (a *App) buildRightPanel() {
-	a.rightPanel = tview.NewFlex().SetDirection(tview.FlexRow)
+func (a *App) buildMainArea() {
+	a.mainFlex = tview.NewFlex().SetDirection(tview.FlexRow)
 
-	a.shipLogo = tview.NewTextView().SetText(`            _                 _                                                          _
+	shipLogo := tview.NewTextView().SetText(`            _                 _                                                          _
            | |_ _ __ __ _ ___| |__  _ __   ___ _   _ _ __ ___  _ __  ___    ___ ___   __| | ___
            | __| '__/ _` + "`" + ` / __| '_ \| '_ \ / _ \ | | | '__/ _ \| '_ \/ __|  / __/ _ \ / _` + "`" + ` |/ _ \
            | |_| | | (_| \__ \ | | | | | |  __/ |_| | | | (_) | | | \__ \ | (_| (_) | (_| |  __/
             \__|_|  \__,_|___/_| |_|_| |_|\___|\__,_|_|  \___/|_| |_|___/  \___\___/ \__,_|\___|`).SetTextColor(tcell.ColorYellow)
-
-	a.rightPanel.AddItem(a.shipLogo, 8, 1, false)
+	a.mainFlex.AddItem(shipLogo, 8, 1, false)
 
 	a.animationLbl = tview.NewTextView().SetText("")
-	a.rightPanel.AddItem(a.animationLbl, 15, 1, false)
+	a.mainFlex.AddItem(a.animationLbl, 15, 1, false)
 
-	a.mainInputBox = tview.NewBox().SetBorder(true).SetTitle("")
-	a.rightPanel.AddItem(a.mainInputBox, 1, 1, false)
+	a.chatArea = tview.NewTextView().SetScrollable(true)
+	a.mainFlex.AddItem(a.chatArea, 0, 10, false)
 
-	a.mainInput = tview.NewInputField().SetFieldWidth(50)
-	a.mainInput.SetPlaceholder("ask anything... (use tab to switch modes)")
-	a.mainInput.SetChangedFunc(func(text string) {
+	a.inputBox = tview.NewBox().SetBorder(true).SetTitle("")
+	a.mainFlex.AddItem(a.inputBox, 1, 1, false)
+
+	a.inputField = tview.NewInputField().SetFieldWidth(50)
+	a.inputField.SetPlaceholder("ask anything... (use tab to switch modes)")
+	a.inputField.SetChangedFunc(func(text string) {
 		if len(text) > 0 {
 			display := text[:minInt(len(text), 40)]
-			a.mainInputBox.SetTitle(fmt.Sprintf(" %s ", display))
+			a.inputBox.SetTitle(fmt.Sprintf(" %s ", display))
 		} else {
-			a.mainInputBox.SetTitle(" ask anything... (use tab to switch modes) ")
+			a.inputBox.SetTitle(" ask anything... (use tab to switch modes) ")
 		}
 	})
-	a.mainInput.SetDoneFunc(func(key tcell.Key) {
+	a.inputField.SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
-			text := a.mainInput.GetText()
+			text := a.inputField.GetText()
 			if text != "" {
 				a.currentChat.Messages = append(a.currentChat.Messages, Message{Role: "user", Content: text})
-				a.mainInput.SetText("")
-				a.mainInputBox.SetTitle("")
+				a.renderChatHistory()
+				a.inputField.SetText("")
+				a.inputBox.SetTitle("")
 				go a.processMessage(text)
 			}
 		}
 	})
 
-	a.rightPanel.AddItem(a.mainInput, 1, 1, true)
+	a.mainFlex.AddItem(a.inputField, 1, 1, true)
 }
 
 func minInt(a, b int) int {
@@ -348,14 +338,21 @@ func minInt(a, b int) int {
 	return b
 }
 
+func (a *App) appendChat(text string, color tcell.Color) {
+	a.chatArea.SetTextColor(color)
+	a.chatArea.Write([]byte(text))
+	a.chatArea.ScrollToEnd()
+}
+
 func (a *App) processMessage(content string) {
 	a.isStreaming = true
 
-	a.thinkingLbl = tview.NewTextView().SetText("thinking...").SetTextColor(tcell.ColorGreen)
+	a.appendChat("\n"+strings.Repeat("─", 60)+"\n", tcell.ColorGreen)
+	a.appendChat("thinking...\n", tcell.ColorGreen)
 
 	resp, err := callAgnesAPI(a.currentChat.Messages, a.tools, true)
 	if err != nil {
-		a.aiAnswerLbl = tview.NewTextView().SetText(fmt.Sprintf("Error: %v", err)).SetTextColor(tcell.ColorRed)
+		a.appendChat(fmt.Sprintf("\nError: %v\n", err), tcell.ColorRed)
 		a.isStreaming = false
 		return
 	}
@@ -372,14 +369,14 @@ func (a *App) processMessage(content string) {
 		}
 	}
 
-	minutes := 0
-	seconds := 1
-	a.thinkingLbl = tview.NewTextView().SetText(fmt.Sprintf("thinked for %dm%ds", minutes, seconds)).SetTextColor(tcell.ColorGray)
+	a.appendChat("thinked for 0m1s\n", tcell.ColorGray)
+	a.appendChat(strings.Repeat("─", 60)+"\n\n", tcell.ColorGray)
+	a.appendChat("trashneurons: ", tcell.ColorLightCyan)
 
 	if len(toolCalls) > 0 {
 		a.handleToolCalls(toolCalls)
 	} else {
-		a.aiAnswerLbl = tview.NewTextView().SetText("trashneurons: " + fullResponse.String()).SetTextColor(tcell.ColorLightCyan)
+		a.appendChat(fullResponse.String()+"\n", tcell.ColorLightCyan)
 		a.currentChat.Messages = append(a.currentChat.Messages, Message{
 			Role:    "assistant",
 			Content: fullResponse.String(),
@@ -394,9 +391,9 @@ func (a *App) processMessage(content string) {
 
 func (a *App) handleToolCalls(toolCalls []ToolCall) {
 	for _, tc := range toolCalls {
+		a.appendChat(fmt.Sprintf("tool call: %s\n", tc.Function.Name), tcell.ColorYellow)
 		result := executeTool(tc.Function.Name, tc.Function.Arguments)
-
-		a.aiAnswerLbl = tview.NewTextView().SetText(fmt.Sprintf("tool: %s\n%s", tc.Function.Name, result)).SetTextColor(tcell.ColorYellow)
+		a.appendChat(result+"\n", tcell.ColorDefault)
 
 		a.currentChat.Messages = append(a.currentChat.Messages, Message{
 			Role:    "tool",
@@ -415,7 +412,8 @@ func (a *App) handleToolCalls(toolCalls []ToolCall) {
 			finalResp.WriteString(choice.Message.Content)
 		}
 
-		a.aiAnswerLbl = tview.NewTextView().SetText("trashneurons: " + finalResp.String()).SetTextColor(tcell.ColorLightCyan)
+		a.appendChat("trashneurons: ", tcell.ColorLightCyan)
+		a.appendChat(finalResp.String()+"\n", tcell.ColorLightCyan)
 		a.currentChat.Messages = append(a.currentChat.Messages, Message{
 			Role:    "assistant",
 			Content: finalResp.String(),
@@ -423,37 +421,27 @@ func (a *App) handleToolCalls(toolCalls []ToolCall) {
 	}
 }
 
-func (a *App) showChatScreen() {
-	topFlex := tview.NewFlex().SetDirection(tview.FlexRow)
+func (a *App) renderChatHistory() {
+	a.chatArea.Clear()
+	a.chatArea.SetTextColor(tcell.ColorDefault)
 
-	a.chatTopBox = tview.NewBox().SetBorder(true).SetTitle("")
-	topFlex.AddItem(a.chatTopBox, 1, 1, false)
-
-	if a.thinkingLbl != nil {
-		topFlex.AddItem(a.thinkingLbl, 1, 1, false)
+	for _, msg := range a.currentChat.Messages[1:] {
+		switch msg.Role {
+		case "user":
+			a.appendChat("\n"+strings.Repeat("─", 60)+"\n", tcell.ColorGreen)
+			a.appendChat("you: ", tcell.ColorGreen)
+			a.appendChat(msg.Content+"\n", tcell.ColorDefault)
+		case "assistant":
+			a.appendChat("\n", tcell.ColorDefault)
+			a.appendChat("trashneurons: ", tcell.ColorLightCyan)
+			a.appendChat(msg.Content+"\n", tcell.ColorDefault)
+		case "tool":
+			a.appendChat("\n", tcell.ColorDefault)
+			a.appendChat("[tool output]: ", tcell.ColorYellow)
+			a.appendChat(msg.Content+"\n", tcell.ColorDefault)
+		}
 	}
-
-	if a.aiAnswerLbl != nil {
-		topFlex.AddItem(a.aiAnswerLbl, 0, 10, true)
-	}
-
-	bottomFlex := tview.NewFlex().SetDirection(tview.FlexRow)
-
-	a.chatBottomBox = tview.NewBox().SetBorder(true).SetTitle("")
-	bottomFlex.AddItem(a.chatBottomBox, 1, 1, false)
-
-	if a.userQuestion != nil {
-		bottomFlex.AddItem(a.userQuestion, 0, 10, false)
-	}
-
-	centerFlex := tview.NewFlex().SetDirection(tview.FlexRow)
-	centerFlex.AddItem(topFlex, 0, 7, false)
-	centerFlex.AddItem(bottomFlex, 0, 3, false)
-
-	chatFrame := tview.NewFrame(centerFlex)
-	chatFrame.SetBorder(true)
-
-	a.pages.AddAndSwitchToPage("chat", chatFrame, true)
+	a.chatArea.ScrollToEnd()
 }
 
 func (a *App) ToggleMode() {
@@ -681,23 +669,8 @@ func showBootScreen() {
 	inputField := tview.NewInputField()
 	inputField.SetFieldWidth(40)
 	inputField.SetPlaceholder("press any key to continue...")
-	inputField.SetChangedFunc(func(text string) {})
 
 	done := make(chan struct{})
-	inputField.SetDoneFunc(func(key tcell.Key) {
-		bootApp.Stop()
-		go func() {
-			for i := 3; i > 0; i-- {
-				bootApp.QueueUpdateDraw(func() {
-					statusText.SetText(fmt.Sprintf("successfully! opening in %d...", i))
-				})
-				time.Sleep(1 * time.Second)
-			}
-			bootApp.Stop()
-			done <- struct{}{}
-		}()
-	})
-
 	inputField.SetChangedFunc(func(text string) {
 		if text != "" {
 			bootApp.Stop()
@@ -708,7 +681,6 @@ func showBootScreen() {
 					})
 					time.Sleep(1 * time.Second)
 				}
-				bootApp.Stop()
 				done <- struct{}{}
 			}()
 		}

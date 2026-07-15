@@ -65,8 +65,6 @@ echo "  finished install! all files located in $install_dir"
 echo ""
 echo "  for use: type \"trashneurons-cli\""
 echo ""
-echo "  PRESS ENTER TO CLOSE INSTALLER"
-read -r
 
 current_shell=$(basename "$SHELL" 2>/dev/null || echo "bash")
 case $current_shell in

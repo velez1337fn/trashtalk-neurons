@@ -70,6 +70,12 @@ if [ "$INSTALL_CLI" = true ]; then
         exit 1
     fi
 
+    # Проверяем, установлен ли уже бинарник
+    if [ -f "$INSTALL_DIR/trashneurons-cli" ]; then
+        echo -e "${YELLOW}Обнаружена предыдущая установка CLI. Будет выполнена переустановка.${NC}"
+        rm -f "$INSTALL_DIR/trashneurons-cli"
+    fi
+
     echo -e "${BLUE}Скачивание бинарника...${NC}"
     if ! curl -L -o /tmp/trashneurons-cli https://github.com/velez1337fn/trashtalk-neurons/releases/latest/download/trashneurons-cli --progress-bar; then
         echo -e "${RED}Ошибка скачивания.${NC}"

@@ -1,15 +1,20 @@
 #!/usr/bin/env bash
 set -e
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
+
 if [[ "$(uname)" != "Linux" ]]; then
     echo -e "${RED}Ошибка: только Linux.${NC}"
     exit 1
 fi
+
 clear
+
+# ASCII-арт с рамкой (полностью соответствует макету)
 cat << "EOF"
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────┐
 │   .___                 __         .__  .__                              ____    _______      _______     │telegram - @trashtalkAI│
@@ -40,32 +45,55 @@ cat << "EOF"
 │                     │           └──────────────────────────────────────┘              │     │   │                   *            │
 └─────────────────────┴─────────────────────────────────────────────────────────────────└─────┴───┴────────────────────────────────┘
 EOF
+
 echo -e "\n${YELLOW}Выберите вариант:${NC}"
 echo "1) Desktop (в разработке)"
 echo "2) CLI"
 echo "3) Оба (Desktop - заглушка)"
 read -p "Введите номер: " choice
+
 case $choice in
     1) echo -e "${RED}Desktop пока не реализован.${NC}"; exit 0 ;;
     2) INSTALL_CLI=true ;;
     3) INSTALL_CLI=true; echo -e "${YELLOW}Будет установлен только CLI.${NC}" ;;
     *) echo -e "${RED}Неверный выбор.${NC}"; exit 1 ;;
 esac
+
 if [ "$INSTALL_CLI" = true ]; then
     echo -e "\n${GREEN}Установка CLI...${NC}"
     INSTALL_DIR="$HOME/.local/bin"
     mkdir -p "$INSTALL_DIR"
+
+    # Проверка доступности GitHub
+    echo -e "${BLUE}Проверка соединения с GitHub...${NC}"
+    if ! curl -sSf --connect-timeout 5 https://github.com > /dev/null; then
+        echo -e "${RED}Не удаётся подключиться к GitHub. Проверьте интернет и DNS.${NC}"
+        echo -e "${YELLOW}Попробуйте выполнить: echo 'nameserver 1.1.1.1' | sudo tee /etc/resolv.conf${NC}"
+        exit 1
+    fi
+
     echo -e "${BLUE}Скачивание бинарника...${NC}"
-    curl -L -o /tmp/trashneurons-cli https://github.com/velez1337fn/trashtalk-neurons/releases/latest/download/trashneurons-cli --progress-bar
+    # Скачиваем с прогресс-баром
+    if ! curl -L -o /tmp/trashneurons-cli https://github.com/velez1337fn/trashtalk-neurons/releases/latest/download/trashneurons-cli --progress-bar; then
+        echo -e "${RED}Ошибка скачивания. Проверьте URL или версию релиза.${NC}"
+        exit 1
+    fi
+
     chmod +x /tmp/trashneurons-cli
     mv /tmp/trashneurons-cli "$INSTALL_DIR/trashneurons-cli"
+
     if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
         echo -e "${YELLOW}Добавляем ~/.local/bin в PATH.${NC}"
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
         export PATH="$HOME/.local/bin:$PATH"
     fi
+
     mkdir -p "$HOME/.config/trashneurons"
-    echo -e "${GREEN}Готово! Запуск: trashneurons-cli${NC}"
+
+    echo -e "\n${GREEN}Установка завершена!${NC}"
+    echo -e "Теперь вы можете запустить CLI командой: ${YELLOW}trashneurons-cli${NC}"
+    echo -e "Если команда не найдена, перезапустите терминал или выполните: ${YELLOW}source ~/.bashrc${NC}"
 fi
+
 echo -e "\n${GREEN}Нажмите Enter для выхода.${NC}"
 read
